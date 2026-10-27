@@ -49,9 +49,25 @@ git -C ~/mars-report-skill status --short
 ```
 
 For an authorized skill update, stage only the changed paths, inspect the full
-staged diff, commit with the four sections specified in `AGENTS.md`, and push
-`main`. Pull the new commit on the other devices. The skill link follows updates
-without reinstalling. Preserve local work if fast-forward is not possible.
+staged diff, and commit with the four sections specified in `AGENTS.md`.
+The enrolled clients have a `gateway` Git remote. Publish through it:
+
+```sh
+git -C ~/mars-report-skill pull --ff-only
+git -C ~/mars-report-skill push gateway main
+ssh <configured-gateway> 'git -C <gateway-skill-checkout> push origin main'
+```
+
+The administrator configures the gateway checkout with
+`receive.denyCurrentBranch=updateInstead`; receiving fails if that checkout is
+dirty. Its existing GitHub credentials perform the final push. This supports
+organizations that disable deploy keys without distributing an account token.
+Pull the new commit on the other devices. The skill link follows updates without
+reinstalling. Preserve local work if fast-forward is not possible.
+
+The gateway and its publication relay must be awake and reachable for publishing
+and pushing. GitHub reads remain direct. Revoking the device's gateway SSH access
+revokes its publication and shared-write route.
 
 `verification/` records de-identified live publication and synchronization checks.
 Device-local raw receipts and private reports stay outside this repository.
