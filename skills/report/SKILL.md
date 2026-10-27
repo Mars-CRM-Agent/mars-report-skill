@@ -58,9 +58,12 @@ unrelated report. A successful publish does not prove the behavior being reporte
 The installed skill is linked to `~/mars-report-skill/skills/report`.
 Use `git -C ~/mars-report-skill pull --ff-only` before a task when clean. Authorized
 updates can be committed and pushed to the shared `main` branch after reviewing
-only the owned staged paths. Push the commit with `git push gateway main`, then
-run `git -C <gateway-skill-checkout> push origin main` over the configured gateway
-SSH connection. Verify both pushes; the first alone does not prove GitHub sync.
+only the owned staged paths. Push the commit with `git push gateway main`.
+With `githubSync: gateway-watch`, the gateway's logged-in LaunchAgent pushes the
+ref to GitHub on changes and retries every 60 seconds. Compare `git rev-parse HEAD`
+with `git ls-remote origin refs/heads/main` after the push. Allow the retry interval;
+if the SHA remains different, report pending synchronization and inspect the
+repository-specific gateway job. Never treat the first push as GitHub acceptance.
 Read the remote path with `git remote get-url gateway`. The gateway uses its own
 existing credentials; do not distribute its token or bypass an organization ban
 on deploy keys. Follow the repository's `AGENTS.md` commit contract.

@@ -25,6 +25,7 @@ An administrator supplies `~/.config/mars-report/connection.json` on each device
   "repository": "/absolute/path/to/Mars_agent",
   "bun": "/absolute/path/to/bun",
   "relay": "report-host-ssh-alias",
+  "githubSync": "gateway-watch",
   "projects": ["/absolute/path/to/authorized/project"]
 }
 ```
@@ -55,19 +56,26 @@ The enrolled clients have a `gateway` Git remote. Publish through it:
 ```sh
 git -C ~/mars-report-skill pull --ff-only
 git -C ~/mars-report-skill push gateway main
-ssh <configured-gateway> 'git -C <gateway-skill-checkout> push origin main'
+git -C ~/mars-report-skill rev-parse HEAD
+git -C ~/mars-report-skill ls-remote origin refs/heads/main
 ```
 
 The administrator configures the gateway checkout with
 `receive.denyCurrentBranch=updateInstead`; receiving fails if that checkout is
-dirty. Its existing GitHub credentials perform the final push. This supports
-organizations that disable deploy keys without distributing an account token.
+dirty. A repository-specific LaunchAgent in the gateway's logged-in user session
+pushes `main` to GitHub on ref changes, with a 60-second retry interval. This
+session can use the existing Keychain credential even when an SSH login cannot.
+Compare the two printed SHAs; a successful gateway push alone is not GitHub
+acceptance. This supports organizations that disable deploy keys without
+distributing an account token.
 Pull the new commit on the other devices. The skill link follows updates without
 reinstalling. Preserve local work if fast-forward is not possible.
 
-The gateway and its publication relay must be awake and reachable for publishing
-and pushing. GitHub reads remain direct. Revoking the device's gateway SSH access
-revokes its publication and shared-write route.
+The gateway must be awake and logged in for automatic GitHub writes. Its
+publication relay must also be reachable for reports. GitHub reads remain direct.
+Revoking the device's gateway SSH access revokes its publication and shared-write
+route. Reboot persistence is configured by LaunchAgent installation; an actual
+reboot is outside this acceptance test.
 
 `verification/` records de-identified live publication and synchronization checks.
 Device-local raw receipts and private reports stay outside this repository.
